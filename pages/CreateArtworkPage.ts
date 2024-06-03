@@ -1,12 +1,14 @@
 import { Page, expect } from "@playwright/test";
 import { faker } from '@faker-js/faker';
+import { BasicPage } from "./BasicPage";
 
 
-export class CreateArtworkPage {
+export class CreateArtworkPage extends BasicPage {
     private page: Page;
 
     //constructor which intiliaze the page
     constructor(page: Page) {
+        super()
         this.page = page;
     }
 
@@ -24,7 +26,7 @@ export class CreateArtworkPage {
     }
 
     private get descriptionField() {
-        return this.page.locator("//*[@id='editorblock']//*[@contenteditable]")
+        return this.page.locator(".ce-paragraph")
     }
 
     private get currentPriceField() {
@@ -44,7 +46,7 @@ export class CreateArtworkPage {
     }
 
     private get primarySaleBuyerField() {
-        return this.page.locator('[id="headlessui-combobox-input-\\:r2\\:"]')
+        return this.page.getByPlaceholder('Username or Email address').first()
     }
 
     private get styleOfArtworkField() {
@@ -81,7 +83,7 @@ export class CreateArtworkPage {
     }
 
     private get ownedByField() {
-        return this.page.locator('[id="headlessui-combobox-input-\\:r3\\:"]')
+        return this.page.getByPlaceholder('Username or Email address').nth(1);
     }
 
     private get themarketplaceMintedOnfield() {
@@ -132,64 +134,58 @@ export class CreateArtworkPage {
     }
 
     async fillAllArtWorkFields(testFilePath): Promise<string> {
-        const fiveDigitsRandomNumber = faker.number.int({ max: 99999 });
-        const newArtworkName = "Artwork#" + fiveDigitsRandomNumber;
+        let randomFiveDigitsNumber = faker.number.int({ max: 99999 });
+        let randomEmail=faker.internet.email();
+        let randomDescriptionValue: string = faker.commerce.productName();
+        let randomnArtworkName = "Artwork#" + randomFiveDigitsNumber;
+    
+        await this.artworkNameTextField.waitFor({ state: 'visible' });
+        await this.fillInputElementWithRetries(this.artworkNameTextField, randomnArtworkName)
 
-        await this.artworkNameTextField.fill(newArtworkName);
+        await this.selectFixedmOptionFromList(this.editionsField,this.editionslistOptions);
+       
+        await this.fillElementWithRetries(this.descriptionField, randomDescriptionValue);
 
-        await this.editionsField.click();
-        await this.editionslistOptions.click();
+        await this.fillInputElementWithRetries(this.currentPriceField, randomFiveDigitsNumber.toString());
 
-        await this.descriptionField.fill(faker.commerce.productName());
+        await this.fillInputElementWithRetries(this.primarySaleCurrencyField, randomFiveDigitsNumber.toString());
 
-        await this.currentPriceField.fill(fiveDigitsRandomNumber.toString());
+        await this.selectRandomOptionFromList(this.dateAtPrimarySaleButton,this.activeDatesIncalendarButton)
 
-        await this.primarySaleCurrencyField.fill(fiveDigitsRandomNumber.toString());
-
-        await this.dateAtPrimarySaleButton.click();
-        await this.activeDatesIncalendarButton.nth(faker.number.int({ max: await this.activeDatesIncalendarButton.count() - 1 })).click()
-
-        await this.primarySaleBuyerField.fill(faker.internet.email());
+        await this.fillInputElementWithRetries(this.primarySaleBuyerField,randomEmail);
 
         await this.page.setInputFiles('input[type="file"]', testFilePath);
-        await this.page.waitForSelector("//div[contains(@style,'.jpeg')]",{timeout: 60000 });
+        await this.page.waitForSelector("//div[contains(@style,'.jpeg')]", { timeout: 100000 });
 
-        await this.styleOfArtworkField.click();
-        await this.styleOfArtworkCheckBoxList.nth(faker.number.int({ max: await this.styleOfArtworkCheckBoxList.count() - 1 })).click()
-
-        await this.nftGenesisField.click();
-        await this.nftGenesisFieldRadioList.nth(faker.number.int({ max: await this.nftGenesisFieldRadioList.count() - 1 })).click()
-
-        await this.supplyField.click();
-        await this.supplyFieldRadioList.nth(faker.number.int({ max: await this.supplyFieldRadioList.count() - 1 })).click()
-
-
-        await this.callaboratoeField.fill(faker.internet.email());
+        await this.selectRandomOptionFromList(this.styleOfArtworkField,this.styleOfArtworkCheckBoxList)
+    
+        await this.selectRandomOptionFromList(this.nftGenesisField,this.nftGenesisFieldRadioList)
+      
+        await this.selectRandomOptionFromList(this.supplyField,this.supplyFieldRadioList)
+       
+        await this.fillInputElementWithRetries(this.callaboratoeField, randomFiveDigitsNumber.toString());
         await this.callaboratoeList.click()
 
-        await this.ownedByField.fill(faker.internet.email());
+        await this.fillInputElementWithRetries(this.ownedByField, randomEmail);
 
-        await this.themarketplaceMintedOnfield.click()
-        await this.themarketplaceMintedOnfieldListOptions.nth(faker.number.int({ max: await this.themarketplaceMintedOnfieldListOptions.count() - 1 })).click();
-        await this.marketplaceURL.fill(faker.internet.url());
-
-        await this.mintedOnDate.click();
-        await this.activeDatesIncalendarButton.nth(faker.number.int({ max: await this.activeDatesIncalendarButton.count() - 1 })).click()
-
-        await this.createdOnDate.click();
-        await this.activeDatesIncalendarButton.nth(faker.number.int({ max: await this.activeDatesIncalendarButton.count() - 1 })).click()
-
-        await this.copyRightField.click();
-        await this.copyRightFieldListOption.click();
+        await this.selectRandomOptionFromList(this.themarketplaceMintedOnfield,this.themarketplaceMintedOnfieldListOptions);
+       
+        await this.fillInputElementWithRetries(this.marketplaceURL,faker.internet.url());
+    
+        await this.selectRandomOptionFromList(this.mintedOnDate, this.activeDatesIncalendarButton)
+        
+        await this.selectRandomOptionFromList(this.createdOnDate,this.activeDatesIncalendarButton)
+    
+        await this.selectFixedmOptionFromList(this.copyRightField,this.copyRightFieldListOption)
 
         await this.artistLoyalityRadioButton.nth(faker.number.int({ max: await this.artistLoyalityRadioButton.count() - 1 })).click()
 
         await this.physicalPiece.nth(faker.number.int({ max: await this.physicalPiece.count() - 1 })).click()
 
         await this.publishButton.click();
-        await this.page.waitForSelector('role=link[name="Add Artwork"]',{timeout:60000});
+        await this.page.waitForSelector('role=link[name="Add Artwork"]');
 
-        return newArtworkName;
+        return randomnArtworkName;
     }
 
 
